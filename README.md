@@ -5,4 +5,6 @@ For student, please fork this as project scaffcold.
 
 Also after fork:
 
-#go to  'admin'. In settings change visibility from 'Public' to 'Private'!!
+#Go to  'admin'. In settings change visibility from 'Public' to 'Private'!!
+
+If you don't have this option, you might consider apply for [github edu pack](https://education.github.com/pack)
