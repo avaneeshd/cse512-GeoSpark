@@ -1,7 +1,7 @@
 # cse512-15fall-project
 Project for CSD512 Distribute and Parallel Database, 15 Fall semester, Arizona State University.
 
-For student, please fork this as project scaffcold.
+For student, please fork this as project start up.
 
 Also after fork:
 
