@@ -41,9 +41,6 @@ public class FarthestPair implements java.io.Serializable
     	//Initialize convex hull
     	FarthestPair fPair = new FarthestPair();
     	
-    	//TODO: Initialize, need to remove existing in output file location.
-    	//cHull.deleteFilesIfExists();
-    	
     	fPair.input = args[0];
     	fPair.output = args[1];
     	fPair.deleteFilesIfExists(fPair.output);
