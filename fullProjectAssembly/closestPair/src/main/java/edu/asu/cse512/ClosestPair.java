@@ -26,7 +26,7 @@ public class ClosestPair implements Serializable
 	*/
     public static void main(String[] args) {
     	if(args.length < 2){
-    		System.out.println("Convex Hull expects atleast 2 arguments, inputLocation and outputLocation. Exiting..");
+    		System.out.println("Closest Pair expects atleast 2 arguments, inputLocation and outputLocation. Exiting..");
     		return;
     	}
     	
