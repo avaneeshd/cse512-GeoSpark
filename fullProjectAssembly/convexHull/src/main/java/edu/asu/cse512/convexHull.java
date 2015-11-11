@@ -52,9 +52,6 @@ public class convexHull implements java.io.Serializable
     	//Initialize convex hull
     	convexHull cHull = new convexHull();
     	
-    	//TODO: Initialize, need to remove existing in output file location.
-    	//cHull.deleteFilesIfExists();
-    	
     	cHull.input = args[0];
     	cHull.output = args[1];
     	cHull.deleteFilesIfExists(cHull.output);
