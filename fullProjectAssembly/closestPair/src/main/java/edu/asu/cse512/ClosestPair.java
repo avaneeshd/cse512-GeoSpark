@@ -34,7 +34,7 @@ public class ClosestPair implements Serializable
     		System.out.println("Closest Pair expects atleast 2 arguments, inputLocation and outputLocation. Exiting..");
     		return;
     	}
-    	
+    	deleteFilesIfExists(args[1]);
     	SparkConf conf = new SparkConf().setAppName("Closest Pair");
         JavaSparkContext context = new JavaSparkContext(conf);
         //Initialize, need to remove existing in output file location.
@@ -56,7 +56,7 @@ public class ClosestPair implements Serializable
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
         FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();

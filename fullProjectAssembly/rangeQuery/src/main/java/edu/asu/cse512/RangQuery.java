@@ -38,6 +38,7 @@ public class RangQuery implements Serializable
     	SparkConf conf = new SparkConf().setAppName("RangQuery");
         JavaSparkContext context = new JavaSparkContext(conf);
         try {
+        	deleteFilesIfExists(args[2]);
         	JavaRDD<String> pointsRDD = context.textFile(args[0]);
         	JavaRDD<String> queryRDD = context.textFile(args[1]);
         	rangeQuery(pointsRDD, queryRDD, args[2]);
@@ -58,7 +59,7 @@ public class RangQuery implements Serializable
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
         FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();

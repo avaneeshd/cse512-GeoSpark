@@ -49,7 +49,6 @@ public class convexHull implements java.io.Serializable
     	//Get spark context
     	SparkConf  conf  =  new  SparkConf (). setAppName ( "Group24-ConvexHull" );  
     	JavaSparkContext  context  =  new  JavaSparkContext ( conf );
-    	
     	//Initialize convex hull
     	convexHull cHull = new convexHull();
     	
@@ -58,7 +57,7 @@ public class convexHull implements java.io.Serializable
     	
     	cHull.input = args[0];
     	cHull.output = args[1];
-    	
+    	cHull.deleteFilesIfExists(cHull.output);
     	//Run convex hull
     	cHull.run(context);
     }
@@ -94,14 +93,14 @@ public class convexHull implements java.io.Serializable
     }
     
     
-    private void deleteFilesIfExists(){
+    private void deleteFilesIfExists(String outputPath){
     	//Delete any output files if present
     	Configuration conf = new Configuration();
         conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
         FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(output), true);
 		} catch (IOException e) {
 			e.printStackTrace();
