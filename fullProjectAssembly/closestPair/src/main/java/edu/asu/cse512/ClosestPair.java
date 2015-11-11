@@ -3,6 +3,8 @@ package edu.asu.cse512;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -14,6 +16,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
+
+import edu.asu.cse512.Tuple;
+import edu.asu.cse512.TuplePair;
 
 @SuppressWarnings("serial")
 public class ClosestPair implements Serializable
@@ -65,7 +70,14 @@ public class ClosestPair implements Serializable
 		JavaRDD<TuplePair> closestPointCollection = collectClosestPoints(context, tuples);
 		TuplePair closestPair = reduceClosestPointCollection(closestPointCollection);
 		if (closestPair != null) {
-			JavaRDD<Tuple> result = context.parallelize(closestPair.asList()).repartition(1);
+			List<Tuple> closestPairList = closestPair.asList();
+			Collections.sort(closestPairList, new Comparator<Tuple>() {
+				public int compare(Tuple o1, Tuple o2) {
+					int result = Double.compare(o1.getX(), o2.getX());
+		               return (result == 0 ? Double.compare(o1.getY(), o2.getY()) : result);
+		            }
+		        });
+			JavaRDD<Tuple> result = context.parallelize(closestPairList).repartition(1);
 			result.saveAsTextFile(outputPath);
 		} else {
 			System.out.println("No closest pair found.");
