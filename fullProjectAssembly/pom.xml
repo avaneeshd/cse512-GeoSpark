@@ -63,8 +63,8 @@
   	<module>union</module>
   	<module>convexHull</module>
   	<module>farthestPair</module>
-  	<module>closetPair</module>
-  	<module>rangeRuery</module>
+  	<module>closestPair</module>
+  	<module>rangeQuery</module>
   	<module>joinQuery</module>
   </modules>
 </project>
