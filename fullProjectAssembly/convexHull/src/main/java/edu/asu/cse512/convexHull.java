@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -78,9 +79,18 @@ public class convexHull implements java.io.Serializable
 		convex_hull = new Polygon();
 		convex_hull.polygon = convexHullRDD.collect();
 		
+		//Sort the final list
+		Collections.sort(convex_hull.polygon, new Comparator<Tuple>() { 
+			public int compare(Tuple o1, Tuple o2) {
+				int result = Double.compare(o1.x, o2.x); 
+				return (result == 0 ? Double.compare(o1.y, o2.y) : result); 
+			}
+		});
+		JavaRDD<Tuple> finalHullRDD = context.parallelize(convex_hull.polygon).repartition(1);
+		
 		//Write result to file 
 		System.out.println("Saving results to the output file");
-		convexHullRDD.saveAsTextFile(output);		
+		finalHullRDD.saveAsTextFile(output);		
     }
     
     
@@ -293,14 +303,6 @@ public class convexHull implements java.io.Serializable
 			List<Tuple> finalHull = new ArrayList<Tuple>();
 			List<Coordinate> cArrayList = Arrays.asList(c).subList(0, c.length-1);
 			c = cArrayList.toArray(new Coordinate[cArrayList.size()]);
-			
-			//Sort the final list
-			Arrays.sort(c, new Comparator<Coordinate>() { 
-				public int compare(Coordinate o1, Coordinate o2) {
-					int result = Double.compare(o1.x, o2.x); 
-					return (result == 0 ? Double.compare(o1.y, o2.y) : result); 
-				}
-			});
 			
 			//Map from Coordinate to Tuple
 			for(int i=0; i<c.length; i++){
