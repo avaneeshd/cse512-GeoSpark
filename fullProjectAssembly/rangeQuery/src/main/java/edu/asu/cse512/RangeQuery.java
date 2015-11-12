@@ -55,18 +55,18 @@ public class RangeQuery implements Serializable {
 	}
 
 	private static void deleteFilesIfExists(String outputPath) {
-		// Delete any output files if present
-		Configuration conf = new Configuration();
-		conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-		conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-		FileSystem hdfs;
+    	//Delete any output files if present
+    	Configuration conf = new Configuration();
+        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
-			hdfs.delete(new Path(outputPath), true);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
+	        hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
+    }
 
 	public static void rangeQuery(JavaRDD<String> input1, JavaRDD<String> input2, String output) {
 		JavaRDD<HashMap<Integer, Tuple>> pointsRDD = processInput1(input1);

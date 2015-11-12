@@ -35,20 +35,21 @@ public class Join {
 	 */
 	public static void main(String[] args) {
 
-		
-		if(args.length < 4){
+		if (args.length < 4) {
 			System.out.println("JoinQuery expects atleast 4 arguments, inputLocation and outputLocation. Exiting..");
-    		return;
+			return;
 		}
-		
-		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group24-JoinQuery" );  
-    	JavaSparkContext  context  =  new  JavaSparkContext ( conf );
-    	
-    	JavaRDD<String> input1 = context.textFile(args[0]);
-        JavaRDD<String> input2 = context.textFile(args[1]);
-        String output = args[2];
-        String type = args[3];
-        deleteFilesIfExists(output);
+
+		SparkConf conf = new SparkConf().setAppName("Group24-JoinQuery");
+		JavaSparkContext context = new JavaSparkContext(conf);
+
+		JavaRDD<String> input1 = context.textFile(args[0]);
+		JavaRDD<String> input2 = context.textFile(args[1]);
+		String output = args[2];
+		String type = args[3];
+
+		deleteFilesIfExists(args[2]);
+
 		// check the type of input 1
 		// And check the corresponding version of RDD
 		JavaRDD<Tuple> pointRDD = null;
@@ -90,18 +91,19 @@ public class Join {
 	}
 
 	private static void deleteFilesIfExists(String outputPath) {
-    	//Delete any output files if present
-    	Configuration conf = new Configuration();
-        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        FileSystem hdfs;
+		// Delete any output files if present
+		Configuration conf = new Configuration();
+		conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+		conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+		FileSystem hdfs;
 		try {
 			hdfs = FileSystem.get(URI.create(outputPath), conf);
-	        hdfs.delete(new Path(outputPath), true);
+			hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    }
+	}
+
 	private static JavaRDD<Tuple2<Integer, ArrayList>> processRectangleQuery(JavaRDD<Rectangle> rectangleRDD,
 			JavaRDD<Rectangle> queryRDD) {
 
