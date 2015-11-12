@@ -3,6 +3,8 @@ package edu.asu.cse512;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -15,6 +17,9 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 
+import edu.asu.cse512.Tuple;
+import edu.asu.cse512.TuplePair;
+
 @SuppressWarnings("serial")
 public class ClosestPair implements Serializable
 {
@@ -26,17 +31,13 @@ public class ClosestPair implements Serializable
 	*/
     public static void main(String[] args) {
     	if(args.length < 2){
-    		System.out.println("Convex Hull expects atleast 2 arguments, inputLocation and outputLocation. Exiting..");
+    		System.out.println("Closest Pair expects atleast 2 arguments, inputLocation and outputLocation. Exiting..");
     		return;
     	}
-    	
     	SparkConf conf = new SparkConf().setAppName("Closest Pair");
         JavaSparkContext context = new JavaSparkContext(conf);
-        //Initialize, need to remove existing in output file location.
-    	
-    	//Implement 
-    	
         try {
+        	deleteFilesIfExists(args[1]);
         	JavaRDD<String> inputRDD = context.textFile(args[0]);
         	closestPair(inputRDD, context, args[1]);
         } catch (Exception ex) {
@@ -51,7 +52,7 @@ public class ClosestPair implements Serializable
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
         FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -65,7 +66,14 @@ public class ClosestPair implements Serializable
 		JavaRDD<TuplePair> closestPointCollection = collectClosestPoints(context, tuples);
 		TuplePair closestPair = reduceClosestPointCollection(closestPointCollection);
 		if (closestPair != null) {
-			JavaRDD<Tuple> result = context.parallelize(closestPair.asList()).repartition(1);
+			List<Tuple> closestPairList = closestPair.asList();
+			Collections.sort(closestPairList, new Comparator<Tuple>() {
+				public int compare(Tuple o1, Tuple o2) {
+					int result = Double.compare(o1.getX(), o2.getX());
+		               return (result == 0 ? Double.compare(o1.getY(), o2.getY()) : result);
+		            }
+		        });
+			JavaRDD<Tuple> result = context.parallelize(closestPairList).repartition(1);
 			result.saveAsTextFile(outputPath);
 		} else {
 			System.out.println("No closest pair found.");

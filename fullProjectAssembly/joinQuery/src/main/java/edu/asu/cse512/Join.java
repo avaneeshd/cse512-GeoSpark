@@ -1,9 +1,14 @@
 package edu.asu.cse512;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -43,7 +48,7 @@ public class Join {
         JavaRDD<String> input2 = context.textFile(args[1]);
         String output = args[2];
         String type = args[3];
-		
+        deleteFilesIfExists(output);
 		// check the type of input 1
 		// And check the corresponding version of RDD
 		JavaRDD<Tuple> pointRDD = null;
@@ -84,6 +89,19 @@ public class Join {
 
 	}
 
+	private static void deleteFilesIfExists(String outputPath) {
+    	//Delete any output files if present
+    	Configuration conf = new Configuration();
+        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        FileSystem hdfs;
+		try {
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
+	        hdfs.delete(new Path(outputPath), true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
 	private static JavaRDD<Tuple2<Integer, ArrayList>> processRectangleQuery(JavaRDD<Rectangle> rectangleRDD,
 			JavaRDD<Rectangle> queryRDD) {
 

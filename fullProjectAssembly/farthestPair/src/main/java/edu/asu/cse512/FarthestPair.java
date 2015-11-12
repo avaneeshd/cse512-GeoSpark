@@ -1,7 +1,12 @@
 package edu.asu.cse512;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -36,14 +41,25 @@ public class FarthestPair implements java.io.Serializable
     	//Initialize convex hull
     	FarthestPair fPair = new FarthestPair();
     	
-    	//TODO: Initialize, need to remove existing in output file location.
-    	//cHull.deleteFilesIfExists();
-    	
     	fPair.input = args[0];
     	fPair.output = args[1];
-    	
+    	fPair.deleteFilesIfExists(fPair.output);
     	//Run FarthestPair
     	fPair.run(context);
+    }
+    
+    private void deleteFilesIfExists(String outputPath) {
+    	//Delete any output files if present
+    	Configuration conf = new Configuration();
+        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        FileSystem hdfs;
+		try {
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
+	        hdfs.delete(new Path(outputPath), true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
     private void run(JavaSparkContext context){

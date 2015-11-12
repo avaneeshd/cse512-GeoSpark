@@ -48,7 +48,7 @@ public class Union implements Serializable
     	SparkConf conf = new SparkConf().setAppName("GeometryUnion");
         JavaSparkContext context = new JavaSparkContext(conf);
         //Initialize, need to remove existing in output file location.
-    	
+        deleteFilesIfExists(args[1]);
     	//Implement 
     	
         try {
@@ -85,18 +85,18 @@ public class Union implements Serializable
        // form representation of points. So first point is same as last point.
        points = points.subList(0, points.size() - 1);
 
-       Collections.sort(points, new Comparator<Coordinate>() {
-           public int compare(Coordinate o1, Coordinate o2) {
-               int result = Double.compare(o1.x, o2.x);
-               return (result == 0 ? Double.compare(o1.y, o2.y) : result);
-           }
-       });
-
        List<Tuple> finalPoints = new ArrayList<Tuple>();
        for (Coordinate eachPoint : points) {
 
            finalPoints.add(new Tuple(eachPoint.x, eachPoint.y));
        }
+       Collections.sort(finalPoints, new Comparator<Tuple>() {
+           public int compare(Tuple o1, Tuple o2) {
+               int result = Double.compare(o1.x, o2.x);
+               return (result == 0 ? Double.compare(o1.y, o2.y) : result);
+           }
+       });
+
 
        JavaRDD<Tuple> result1 = context.parallelize(finalPoints)
                .repartition(1);
@@ -110,7 +110,7 @@ public class Union implements Serializable
        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
        FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();

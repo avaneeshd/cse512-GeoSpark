@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -48,16 +49,12 @@ public class convexHull implements java.io.Serializable
     	//Get spark context
     	SparkConf  conf  =  new  SparkConf (). setAppName ( "Group24-ConvexHull" );  
     	JavaSparkContext  context  =  new  JavaSparkContext ( conf );
-    	
     	//Initialize convex hull
     	convexHull cHull = new convexHull();
     	
-    	//TODO: Initialize, need to remove existing in output file location.
-    	//cHull.deleteFilesIfExists();
-    	
     	cHull.input = args[0];
     	cHull.output = args[1];
-    	
+    	cHull.deleteFilesIfExists(cHull.output);
     	//Run convex hull
     	cHull.run(context);
     }
@@ -78,20 +75,29 @@ public class convexHull implements java.io.Serializable
 		convex_hull = new Polygon();
 		convex_hull.polygon = convexHullRDD.collect();
 		
+		//Sort the final list
+		Collections.sort(convex_hull.polygon, new Comparator<Tuple>() { 
+			public int compare(Tuple o1, Tuple o2) {
+				int result = Double.compare(o1.x, o2.x); 
+				return (result == 0 ? Double.compare(o1.y, o2.y) : result); 
+			}
+		});
+		JavaRDD<Tuple> finalHullRDD = context.parallelize(convex_hull.polygon).repartition(1);
+		
 		//Write result to file 
 		System.out.println("Saving results to the output file");
-		convexHullRDD.saveAsTextFile(output);		
+		finalHullRDD.saveAsTextFile(output);		
     }
     
     
-    private void deleteFilesIfExists(){
+    private void deleteFilesIfExists(String outputPath){
     	//Delete any output files if present
     	Configuration conf = new Configuration();
         conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
         FileSystem hdfs;
 		try {
-			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+			hdfs = FileSystem.get(URI.create(outputPath), conf);
 	        hdfs.delete(new Path(output), true);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -293,14 +299,6 @@ public class convexHull implements java.io.Serializable
 			List<Tuple> finalHull = new ArrayList<Tuple>();
 			List<Coordinate> cArrayList = Arrays.asList(c).subList(0, c.length-1);
 			c = cArrayList.toArray(new Coordinate[cArrayList.size()]);
-			
-			//Sort the final list
-			Arrays.sort(c, new Comparator<Coordinate>() { 
-				public int compare(Coordinate o1, Coordinate o2) {
-					int result = Double.compare(o1.x, o2.x); 
-					return (result == 0 ? Double.compare(o1.y, o2.y) : result); 
-				}
-			});
 			
 			//Map from Coordinate to Tuple
 			for(int i=0; i<c.length; i++){
