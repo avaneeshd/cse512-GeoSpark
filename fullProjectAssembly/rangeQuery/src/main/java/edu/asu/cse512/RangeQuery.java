@@ -3,6 +3,8 @@ package edu.asu.cse512;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -55,18 +57,18 @@ public class RangeQuery implements Serializable {
 	}
 
 	private static void deleteFilesIfExists(String outputPath) {
-    	//Delete any output files if present
-    	Configuration conf = new Configuration();
-        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        FileSystem hdfs;
+		// Delete any output files if present
+		Configuration conf = new Configuration();
+		conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+		conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+		FileSystem hdfs;
 		try {
 			hdfs = FileSystem.get(URI.create(outputPath), conf);
-	        hdfs.delete(new Path(outputPath), true);
+			hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    }
+	}
 
 	public static void rangeQuery(JavaRDD<String> input1, JavaRDD<String> input2, String output) {
 		JavaRDD<HashMap<Integer, Tuple>> pointsRDD = processInput1(input1);
@@ -97,7 +99,9 @@ public class RangeQuery implements Serializable {
 	private static JavaRDD<Integer> getKeys(JavaRDD<HashMap<Integer, Tuple>> filteredPoints) {
 		JavaRDD<Integer> idRDD = filteredPoints.flatMap(new FlatMapFunction<HashMap<Integer, Tuple>, Integer>() {
 			public Iterable<Integer> call(HashMap<Integer, Tuple> t) throws Exception {
-				return t.keySet();
+				ArrayList<Integer> tempList = new ArrayList<Integer>(t.keySet());
+				Collections.sort(tempList);
+				return tempList;
 			}
 		});
 		return idRDD;
