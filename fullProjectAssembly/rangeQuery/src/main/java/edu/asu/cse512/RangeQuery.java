@@ -20,57 +20,60 @@ import org.apache.spark.api.java.function.Function;
  *
  */
 @SuppressWarnings("serial")
-public class RangeQuery implements Serializable 
-{
+public class RangeQuery implements Serializable {
 	/*
 	 * Main function, take two parameter as input, output
+	 * 
 	 * @param inputLocation
+	 * 
 	 * @param outputLocation
 	 * 
-	*/
-    public static void main( String[] args )
-    {
-    	if(args.length < 3){
-    		System.out.println("Range Query expects atleast 3 arguments, input1, input2 and Ouputlocation. Exiting..");
-    		return;
-    	}
-    	
-    	SparkConf conf = new SparkConf().setAppName("RangQuery");
-        JavaSparkContext context = new JavaSparkContext(conf);
-        try {
-        	JavaRDD<String> pointsRDD = context.textFile(args[0]);
-        	JavaRDD<String> queryRDD = context.textFile(args[1]);
-        	rangeQuery(pointsRDD, queryRDD, args[2]);
-        } catch (Exception ex) {
-        	System.out.println("Exception occured processing the input" + ex.getMessage());
-        }
-        //Initialize, need to remove existing in output file location.
-    	
-    	//Implement 
-    	
-    	//Output your result, you need to sort your result!!!
-    	//And,Don't add a additional clean up step delete the new generated file...
-    }
-    private static void deleteFilesIfExists(String outputPath) {
-    	//Delete any output files if present
-    	Configuration conf = new Configuration();
-        conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-        conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        FileSystem hdfs;
+	 */
+	public static void main(String[] args) {
+		if (args.length < 3) {
+			System.out.println("Range Query expects atleast 3 arguments, input1, input2 and Ouputlocation. Exiting..");
+			return;
+		}
+
+		SparkConf conf = new SparkConf().setAppName("RangQuery");
+		JavaSparkContext context = new JavaSparkContext(conf);
+		deleteFilesIfExists(args[2]);
+		try {
+			JavaRDD<String> pointsRDD = context.textFile(args[0]);
+			JavaRDD<String> queryRDD = context.textFile(args[1]);
+			rangeQuery(pointsRDD, queryRDD, args[2]);
+		} catch (Exception ex) {
+			System.out.println("Exception occured processing the input" + ex.getMessage());
+		}
+		// Initialize, need to remove existing in output file location.
+
+		// Implement
+
+		// Output your result, you need to sort your result!!!
+		// And,Don't add a additional clean up step delete the new generated
+		// file...
+	}
+
+	private static void deleteFilesIfExists(String outputPath) {
+		// Delete any output files if present
+		Configuration conf = new Configuration();
+		conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+		conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+		FileSystem hdfs;
 		try {
 			hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
-	        hdfs.delete(new Path(outputPath), true);
+			hdfs.delete(new Path(outputPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    }
-    
-    public static void rangeQuery(JavaRDD<String> input1, JavaRDD<String> input2, String output) {
+	}
+
+	public static void rangeQuery(JavaRDD<String> input1, JavaRDD<String> input2, String output) {
 		JavaRDD<HashMap<Integer, Tuple>> pointsRDD = processInput1(input1);
 		JavaRDD<Polygon> queryRDD = processInput2(input2);
 		// Take the 1st query
 		final Polygon query = queryRDD.first();
-		
+
 		// Filter the points inside the query
 		JavaRDD<HashMap<Integer, Tuple>> resultRDD = pointsRDD.filter(new Function<HashMap<Integer, Tuple>, Boolean>() {
 			public Boolean call(HashMap<Integer, Tuple> point) {
@@ -84,23 +87,22 @@ public class RangeQuery implements Serializable
 				}
 				return false;
 			}
-		});	
-		
+		});
+
 		// Convert HashMapRDD to Integer RDD
 		JavaRDD<Integer> keysRDD = getKeys(resultRDD);
 		keysRDD.repartition(1).saveAsTextFile(output);
 	}
-	
-	private static JavaRDD<Integer> getKeys(JavaRDD<HashMap<Integer,Tuple>> filteredPoints){
-		JavaRDD<Integer> idRDD = filteredPoints.flatMap(new FlatMapFunction<HashMap<Integer,Tuple>, Integer>(){
-			public Iterable<Integer> call(HashMap<Integer,Tuple> t) throws Exception {
-					return t.keySet();
+
+	private static JavaRDD<Integer> getKeys(JavaRDD<HashMap<Integer, Tuple>> filteredPoints) {
+		JavaRDD<Integer> idRDD = filteredPoints.flatMap(new FlatMapFunction<HashMap<Integer, Tuple>, Integer>() {
+			public Iterable<Integer> call(HashMap<Integer, Tuple> t) throws Exception {
+				return t.keySet();
 			}
 		});
 		return idRDD;
 	}
-	
-	
+
 	private static JavaRDD<Polygon> processInput2(JavaRDD<String> input2) {
 		JavaRDD<Polygon> polygonRDD = input2.map(new Function<String, Polygon>() {
 
